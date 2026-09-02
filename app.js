@@ -6,10 +6,27 @@
 const http = require('http')
 const fs = require('fs')
 const path = require('path')
+const crypto = require('crypto')
 const { exec } = require('child_process')
 
+// على السيرفر: DATA_DIR يشير لقرص دائم عشان الجلسة ما تضيع مع كل إعادة تشغيل
 const HERE = __dirname
-const SENT_LOG = path.join(HERE, 'sent.json')
+const DATA = process.env.DATA_DIR || HERE
+fs.mkdirSync(DATA, { recursive: true })
+const SENT_LOG = path.join(DATA, 'sent.json')
+
+// تصريح داخل الرابط: يفتح بضغطة بدون كلمة مرور، وما ينفتح لغير من عنده الرابط.
+// محلياً بدون KEY = مفتوح (السيرفر على 127.0.0.1 فقط).
+const HOSTED = !!process.env.PORT
+const KEY = process.env.KEY || (HOSTED ? persistedKey() : null)
+function persistedKey() {
+  const f = path.join(DATA, 'key.txt')
+  try { return fs.readFileSync(f, 'utf8').trim() } catch {}
+  const k = crypto.randomBytes(12).toString('base64url')
+  fs.writeFileSync(f, k)
+  return k
+}
+const authed = url => !KEY || url.searchParams.get('k') === KEY
 
 // ── تنظيف الأرقام (سعودي) ───────────────────────────────────────────────
 function normalize(raw) {
@@ -91,8 +108,11 @@ async function run({ contacts, message, minDelay, maxDelay }) {
       const { Client, LocalAuth } = require('whatsapp-web.js')
       const QR = require('qrcode')
       const client = new Client({
-        authStrategy: new LocalAuth({ dataPath: path.join(HERE, '.auth') }),
-        puppeteer: { args: ['--no-sandbox'] },
+        authStrategy: new LocalAuth({ dataPath: path.join(DATA, '.auth') }),
+        puppeteer: {
+          executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+          args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+        },
       })
       client.on('qr', async qr => push('qr', { img: await QR.toDataURL(qr, { margin: 1, width: 260 }) }))
       client.on('disconnected', () => { state.client = null; push('log', { level: 'err', text: 'انقطع الاتصال بواتساب' }) })
@@ -149,6 +169,7 @@ const json = (res, code, obj) => { res.writeHead(code, { 'Content-Type': 'applic
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x')
   try {
+    if (!authed(url)) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('غير موجود') }
     if (url.pathname === '/') {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
       return res.end(fs.readFileSync(path.join(HERE, 'ui.html')))
@@ -182,9 +203,10 @@ const server = http.createServer(async (req, res) => {
   }
 })
 
-function listen(port = 3777) {
-  server.once('error', e => (e.code === 'EADDRINUSE' && port < 3790 ? listen(port + 1) : (console.error(e), process.exit(1))))
-  server.listen(port, '127.0.0.1', () => {
+function listen(port = +process.env.PORT || 3777) {
+  server.once('error', e => (e.code === 'EADDRINUSE' && !HOSTED && port < 3790 ? listen(port + 1) : (console.error(e), process.exit(1))))
+  server.listen(port, HOSTED ? '0.0.0.0' : '127.0.0.1', () => {
+    if (HOSTED) return console.log(`شغّال على المنفذ ${port} · الرابط ينتهي بـ  /?k=${KEY}`)
     const url = `http://127.0.0.1:${port}`
     console.log(`\n  الأداة شغّالة:  ${url}\n  لا تسكّر هذي النافذة أثناء الإرسال.\n`)
     const open = process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'start ""' : 'xdg-open'

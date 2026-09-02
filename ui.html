@@ -132,6 +132,10 @@
 const $ = s => document.querySelector(s)
 let contacts = [], bad = [], sentSet = new Set(), running = false
 
+// التصريح من الرابط (?k=...) يمشي مع كل طلب
+const K = new URLSearchParams(location.search).get('k')
+const u = (p, q = '') => p + (K ? (q ? q + '&' : '?') + 'k=' + encodeURIComponent(K) : q)
+
 const fmt = s => s < 60 ? `${Math.round(s)} ثانية` : s < 3600 ? `${Math.round(s/60)} دقيقة` : `${(s/3600).toFixed(1)} ساعة`
 const selected = () => contacts.filter((_, i) => $(`#c${i}`)?.checked)
 
@@ -174,7 +178,7 @@ $('#load').onclick = async () => {
   if (!$('#sheet').value.trim()) return alert('الصق رابط شيت قوقل أولاً')
   $('#load').disabled = true; $('#load').textContent = 'يحمّل...'
   try {
-    const r = await fetch('/contacts?sheet=' + encodeURIComponent($('#sheet').value))
+    const r = await fetch(u('/contacts', '?sheet=' + encodeURIComponent($('#sheet').value)))
     const d = await r.json()
     if (d.error) throw new Error(d.error)
     contacts = d.ok; bad = d.bad; sentSet = new Set(d.sent)
@@ -187,7 +191,7 @@ $('#all').onclick = () => { contacts.forEach((c,i) => $(`#c${i}`).checked = true
 $('#none').onclick = () => { contacts.forEach((c,i) => $(`#c${i}`).checked = false); sync() }
 $('#reset').onclick = async () => {
   if (!confirm('يمسح سجل «أُرسل سابقاً». الرسائل بتنعاد لكل الأرقام. متأكد؟')) return
-  await fetch('/reset', { method: 'POST' }); sentSet = new Set(); render()
+  await fetch(u('/reset'), { method: 'POST' }); sentSet = new Set(); render()
 }
 $('#min').oninput = $('#max').oninput = eta
 
@@ -195,14 +199,14 @@ $('#go').onclick = async () => {
   const list = selected()
   if (!confirm(`إرسال الرسالة لـ ${list.length} رقم. نبدأ؟`)) return
   $('#log').innerHTML = ''; $('#prog').classList.remove('hide')
-  const r = await fetch('/start', { method: 'POST', headers: {'Content-Type':'application/json'},
+  const r = await fetch(u('/start'), { method: 'POST', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ contacts: list, message: $('#msg').value,
       minDelay: +$('#min').value * 1000, maxDelay: +$('#max').value * 1000 }) })
   const d = await r.json()
   if (d.error) return alert(d.error)
   running = true; $('#go').disabled = true; $('#stop').classList.remove('hide')
 }
-$('#stop').onclick = async () => { await fetch('/stop', { method: 'POST' }); log('طلب الإيقاف... ينتهي بعد الرسالة الحالية.') }
+$('#stop').onclick = async () => { await fetch(u('/stop'), { method: 'POST' }); log('طلب الإيقاف... ينتهي بعد الرسالة الحالية.') }
 
 function log(text, cls = 'dimtxt'){
   const d = document.createElement('div')
@@ -210,7 +214,7 @@ function log(text, cls = 'dimtxt'){
   $('#log').prepend(d)
 }
 
-const es = new EventSource('/events')
+const es = new EventSource(u('/events'))
 es.onmessage = e => {
   const m = JSON.parse(e.data)
   if (m.type === 'status') $('#status').textContent = m.text
