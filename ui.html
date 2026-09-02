@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>إرسال واتساب جماعي</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>">
+<style>
+  :root{
+    --bg:#0e1117; --card:#161b22; --line:#252c37; --txt:#e6edf3; --dim:#8b949e;
+    --acc:#25d366; --acc-d:#1da851; --err:#f85149; --warn:#d29922;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f5f6f8; --card:#fff; --line:#e2e5ea; --txt:#1c2128; --dim:#6b7280; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+    font:15px/1.7 -apple-system,"SF Arabic","Segoe UI",Tahoma,sans-serif;
+    padding:32px 20px 80px}
+  .wrap{max-width:940px;margin:0 auto}
+  h1{font-size:24px;margin:0 0 4px}
+  .sub{color:var(--dim);margin:0 0 28px;font-size:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:16px}
+  .card h2{font-size:15px;margin:0 0 14px;display:flex;align-items:center;gap:8px}
+  .n{background:var(--line);width:22px;height:22px;border-radius:50%;display:grid;place-items:center;
+    font-size:12px;color:var(--dim);flex:none}
+  label{display:block;font-size:13px;color:var(--dim);margin-bottom:6px}
+  input,textarea,button{font:inherit;color:inherit}
+  input[type=text],input[type=number],textarea{width:100%;background:var(--bg);border:1px solid var(--line);
+    border-radius:9px;padding:10px 12px;outline:none}
+  input:focus,textarea:focus{border-color:var(--acc)}
+  textarea{min-height:130px;resize:vertical;line-height:1.8}
+  button{background:var(--acc);color:#04240f;border:0;border-radius:9px;padding:11px 20px;
+    font-weight:700;cursor:pointer}
+  button:hover{background:var(--acc-d)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  button.ghost{background:transparent;border:1px solid var(--line);color:var(--txt);font-weight:500}
+  button.ghost:hover{background:var(--line)}
+  button.danger{background:var(--err);color:#fff}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .grow{flex:1;min-width:220px}
+  .hint{font-size:12px;color:var(--dim);margin-top:6px}
+  code{background:var(--bg);border:1px solid var(--line);padding:1px 6px;border-radius:5px;font-size:12px}
+  .list{max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:9px;margin-top:12px}
+  .item{display:flex;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line);font-size:13px}
+  .item:last-child{border-bottom:0}
+  .item .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .item .ph{color:var(--dim);font-size:12px;direction:ltr}
+  .tag{font-size:11px;color:var(--dim);border:1px solid var(--line);padding:0 6px;border-radius:20px}
+  .stats{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;margin-top:12px}
+  .stats b{font-size:19px;display:block;font-weight:700}
+  .stats span{color:var(--dim)}
+  details summary{cursor:pointer;color:var(--warn);font-size:13px;margin-top:12px}
+  .bar{height:7px;background:var(--line);border-radius:20px;overflow:hidden;margin:14px 0 8px}
+  .bar i{display:block;height:100%;background:var(--acc);width:0;transition:width .3s}
+  #log{max-height:280px;overflow:auto;font-size:13px;margin-top:10px}
+  #log div{padding:3px 0;border-bottom:1px solid var(--line)}
+  .ok{color:var(--acc)} .err{color:var(--err)} .dimtxt{color:var(--dim)}
+  #qr{text-align:center;padding:8px}
+  #qr img{border-radius:12px;background:#fff;padding:10px}
+  .hide{display:none!important}
+  .banner{background:color-mix(in srgb,var(--warn) 12%,transparent);border:1px solid var(--warn);
+    color:var(--warn);border-radius:9px;padding:10px 14px;font-size:13px;margin-bottom:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>إرسال واتساب جماعي</h1>
+  <p class="sub">يقرأ الأرقام من شيت قوقل، ينضّفها، ويرسل نفس الرسالة لكل واحد.</p>
+
+  <div class="banner">الرسائل تنرسل من حسابك في واتساب. الإرسال الكثيف قد يعرّض الرقم للحظر — استخدم رقم عمل لو ممكن.</div>
+
+  <!-- ١ الشيت -->
+  <div class="card">
+    <h2><span class="n">١</span> القائمة</h2>
+    <label>رابط شيت قوقل (المشاركة لازم تكون «أي شخص لديه الرابط»)</label>
+    <div class="row">
+      <input type="text" id="sheet" class="grow" dir="ltr" placeholder="https://docs.google.com/spreadsheets/d/...">
+      <button class="ghost" id="load">تحميل</button>
+    </div>
+    <p class="hint">الأعمدة المتوقعة بالترتيب: الاسم · المنصة · بيانات التواصل</p>
+    <div id="listBox" class="hide">
+      <div class="stats">
+        <div><b id="sOk">0</b><span>جاهز للإرسال</span></div>
+        <div><b id="sSent">0</b><span>أُرسل سابقاً</span></div>
+        <div><b id="sBad">0</b><span>يدوي</span></div>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="ghost" id="all">تحديد الكل</button>
+        <button class="ghost" id="none">إلغاء التحديد</button>
+        <button class="ghost" id="reset">تصفير سجل المُرسل</button>
+      </div>
+      <div class="list" id="list"></div>
+      <details id="badBox"><summary></summary><div class="list" id="bad"></div></details>
+    </div>
+  </div>
+
+  <!-- ٢ الرسالة -->
+  <div class="card">
+    <h2><span class="n">٢</span> الرسالة</h2>
+    <textarea id="msg" placeholder="اكتب رسالتك هنا...">هلا {name} 👋
+
+معك فريق أهداف. عندنا فرصة تعاون نحب نعرضها عليك.
+
+تقدر ترد هنا ونرسل لك التفاصيل.</textarea>
+    <p class="hint"><code>{name}</code> تتبدّل باسم كل مؤثر تلقائياً.</p>
+    <div class="row" style="margin-top:14px">
+      <div><label>أقل تأخير (ثانية)</label><input type="number" id="min" value="15" min="3" style="width:110px"></div>
+      <div><label>أكثر تأخير (ثانية)</label><input type="number" id="max" value="45" min="3" style="width:110px"></div>
+      <div class="hint" style="align-self:end;margin:0 0 10px">الوقت المتوقع: <b id="eta">—</b></div>
+    </div>
+  </div>
+
+  <!-- ٣ الإرسال -->
+  <div class="card">
+    <h2><span class="n">٣</span> الإرسال</h2>
+    <div class="row">
+      <button id="go" disabled>ابدأ الإرسال</button>
+      <button class="danger hide" id="stop">إيقاف</button>
+      <span id="status" class="hint" style="margin:0"></span>
+    </div>
+    <div id="qr" class="hide"></div>
+    <div id="prog" class="hide">
+      <div class="bar"><i id="fill"></i></div>
+      <div class="hint" id="counter"></div>
+    </div>
+    <div id="log"></div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s)
+let contacts = [], bad = [], sentSet = new Set(), running = false
+
+const fmt = s => s < 60 ? `${Math.round(s)} ثانية` : s < 3600 ? `${Math.round(s/60)} دقيقة` : `${(s/3600).toFixed(1)} ساعة`
+const selected = () => contacts.filter((_, i) => $(`#c${i}`)?.checked)
+
+function eta(){
+  const n = selected().length
+  const avg = (+$('#min').value + +$('#max').value) / 2
+  $('#eta').textContent = n ? fmt(Math.max(0, n - 1) * avg + n * 3) : '—'
+}
+
+function render(){
+  $('#listBox').classList.remove('hide')
+  $('#list').innerHTML = contacts.map((c, i) => {
+    const done = sentSet.has(c.phone)
+    return `<div class="item" id="r${c.phone}">
+      <input type="checkbox" id="c${i}" ${done ? '' : 'checked'} onchange="sync()">
+      <span class="nm">${esc(c.name)}</span>
+      ${c.platform ? `<span class="tag">${esc(c.platform)}</span>` : ''}
+      <span class="ph">+${c.phone}</span>
+      <span class="st ${done ? 'ok' : 'dimtxt'}">${done ? '✓ أُرسل' : '·'}</span>
+    </div>`
+  }).join('')
+  $('#badBox').classList.toggle('hide', !bad.length)
+  $('#badBox summary').textContent = `⚠ ${bad.length} بيانات تواصل مو أرقام جوال — تحتاج تواصل يدوي`
+  $('#bad').innerHTML = bad.map(b => `<div class="item"><span class="nm">${esc(b.name)}</span><span class="ph">${esc(b.contact) || '(فاضي)'}</span></div>`).join('')
+  sync()
+}
+const esc = s => String(s ?? '').replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))
+
+function sync(){
+  const n = selected().length
+  $('#sOk').textContent = n
+  $('#sSent').textContent = sentSet.size
+  $('#sBad').textContent = bad.length
+  $('#go').disabled = running || !n
+  eta()
+}
+window.sync = sync
+
+$('#load').onclick = async () => {
+  if (!$('#sheet').value.trim()) return alert('الصق رابط شيت قوقل أولاً')
+  $('#load').disabled = true; $('#load').textContent = 'يحمّل...'
+  try {
+    const r = await fetch('/contacts?sheet=' + encodeURIComponent($('#sheet').value))
+    const d = await r.json()
+    if (d.error) throw new Error(d.error)
+    contacts = d.ok; bad = d.bad; sentSet = new Set(d.sent)
+    render()
+  } catch (e) { alert(e.message) }
+  $('#load').disabled = false; $('#load').textContent = 'تحميل'
+}
+
+$('#all').onclick = () => { contacts.forEach((c,i) => $(`#c${i}`).checked = true); sync() }
+$('#none').onclick = () => { contacts.forEach((c,i) => $(`#c${i}`).checked = false); sync() }
+$('#reset').onclick = async () => {
+  if (!confirm('يمسح سجل «أُرسل سابقاً». الرسائل بتنعاد لكل الأرقام. متأكد؟')) return
+  await fetch('/reset', { method: 'POST' }); sentSet = new Set(); render()
+}
+$('#min').oninput = $('#max').oninput = eta
+
+$('#go').onclick = async () => {
+  const list = selected()
+  if (!confirm(`إرسال الرسالة لـ ${list.length} رقم. نبدأ؟`)) return
+  $('#log').innerHTML = ''; $('#prog').classList.remove('hide')
+  const r = await fetch('/start', { method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ contacts: list, message: $('#msg').value,
+      minDelay: +$('#min').value * 1000, maxDelay: +$('#max').value * 1000 }) })
+  const d = await r.json()
+  if (d.error) return alert(d.error)
+  running = true; $('#go').disabled = true; $('#stop').classList.remove('hide')
+}
+$('#stop').onclick = async () => { await fetch('/stop', { method: 'POST' }); log('طلب الإيقاف... ينتهي بعد الرسالة الحالية.') }
+
+function log(text, cls = 'dimtxt'){
+  const d = document.createElement('div')
+  d.className = cls; d.textContent = text
+  $('#log').prepend(d)
+}
+
+const es = new EventSource('/events')
+es.onmessage = e => {
+  const m = JSON.parse(e.data)
+  if (m.type === 'status') $('#status').textContent = m.text
+  if (m.type === 'qr') {
+    $('#qr').classList.remove('hide')
+    $('#qr').innerHTML = `<img src="${m.img}"><p class="hint">من جوالك: واتساب ← الإعدادات ← الأجهزة المرتبطة ← ربط جهاز</p>`
+  }
+  if (m.type === 'ready') { $('#qr').classList.add('hide'); $('#status').textContent = '✅ متصل'; log('متصل بواتساب، يبدأ الإرسال', 'ok') }
+  if (m.type === 'log') log(m.text, m.level === 'err' ? 'err' : 'dimtxt')
+  if (m.type === 'row') {
+    if (m.ok) { sentSet.add(m.phone); const r = $('#r' + m.phone); if (r) r.querySelector('.st').outerHTML = '<span class="st ok">✓ أُرسل</span>' }
+    log(m.ok ? `✅ ${m.name}` : `❌ ${m.name} — ${m.why}`, m.ok ? 'ok' : 'err')
+  }
+  if (m.type === 'progress') {
+    $('#fill').style.width = (m.done / m.total * 100) + '%'
+    $('#counter').textContent = `${m.done} من ${m.total} · نجح ${m.okCount} · فشل ${m.failCount}`
+  }
+  if (m.type === 'waiting') $('#status').textContent = `ينتظر ${Math.round(m.ms/1000)} ثانية...`
+  if (m.type === 'done') {
+    running = false; $('#stop').classList.add('hide'); $('#go').disabled = false
+    $('#status').textContent = m.error ? '⚠️ توقف بخطأ' : '🎉 خلصنا'
+    sync()
+  }
+}
+window.onbeforeunload = () => running ? 'الإرسال شغّال. متأكد؟' : null
+
+// يتذكر آخر شيت استخدمته على هذا الجهاز فقط
+$('#sheet').value = localStorage.getItem('sheet') || ''
+$('#sheet').onchange = () => localStorage.setItem('sheet', $('#sheet').value)
+if ($('#sheet').value) $('#load').click()
+</script>
+</body>
+</html>

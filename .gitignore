@@ -1,0 +1,10 @@
+# جلسة واتساب — لا تُرفع أبداً
+.auth/
+
+# بيانات تشغيل فيها أرقام
+sent.json
+failed.json
+contacts.json
+
+node_modules/
+.DS_Store
