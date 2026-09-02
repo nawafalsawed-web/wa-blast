@@ -115,7 +115,10 @@ async function run({ contacts, message, minDelay, maxDelay }) {
         },
       })
       client.on('qr', async qr => push('qr', { img: await QR.toDataURL(qr, { margin: 1, width: 260 }) }))
-      client.on('disconnected', () => { state.client = null; push('log', { level: 'err', text: 'انقطع الاتصال بواتساب' }) })
+      client.on('disconnected', () => {
+        state.client = null; state.dead = true
+        push('log', { level: 'err', text: 'انقطع الاتصال بواتساب' })
+      })
       push('status', { text: 'يفتح واتساب...' })
       await new Promise((res, rej) => {
         client.once('ready', res)
@@ -127,24 +130,35 @@ async function run({ contacts, message, minDelay, maxDelay }) {
     push('ready', {})
 
     const done = [...sent]
-    let okCount = 0, failCount = 0
+    let okCount = 0, failCount = 0, streak = 0
     for (const [i, c] of pending.entries()) {
       if (state.stop) { push('log', { level: 'info', text: 'تم الإيقاف' }); break }
+      // انقطاع الشبكة أو الجلسة: لا فايدة من إكمال الطابور، والباقي يُستأنف لاحقاً
+      if (state.dead || !state.client) {
+        push('log', { level: 'err', text: `توقف: انقطع الاتصال. الباقي ${pending.length - i} — شغّلها مرة ثانية لما يرجع النت وتكمّل من هنا.` })
+        break
+      }
       const id = `${c.phone}@c.us`
       try {
         if (!(await state.client.isRegisteredUser(id))) {
           failCount++
+          streak = 0 // نتيجة طبيعية لهذا الرقم، مو عطل
           push('row', { phone: c.phone, ok: false, name: c.name, why: 'ما عنده واتساب' })
         } else {
           await state.client.sendMessage(id, message.replaceAll('{name}', c.name))
           done.push(c.phone)
           fs.writeFileSync(SENT_LOG, JSON.stringify(done, null, 2)) // بعد كل رسالة، عشان الاستئناف
-          okCount++
+          okCount++; streak = 0
           push('row', { phone: c.phone, ok: true, name: c.name })
         }
       } catch (e) {
-        failCount++
+        failCount++; streak++
         push('row', { phone: c.phone, ok: false, name: c.name, why: e.message })
+        // خمسة أخطاء ورا بعض = عطل عام (نت أو حظر)، مو مشكلة رقم واحد
+        if (streak >= 5) {
+          push('log', { level: 'err', text: `توقف: ٥ أخطاء متتالية. الباقي ${pending.length - i - 1} — تحقّق من النت وشغّلها مرة ثانية لتكمّل من هنا.` })
+          break
+        }
       }
       push('progress', { done: i + 1, total: pending.length, okCount, failCount })
       if (i < pending.length - 1 && !state.stop) {
