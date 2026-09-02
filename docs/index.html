@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>إرسال واتساب من شيت</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>">
+<style>
+  :root{
+    --bg:#0e1117; --card:#161b22; --line:#252c37; --txt:#e6edf3; --dim:#8b949e;
+    --acc:#25d366; --acc-d:#1da851; --err:#f85149; --warn:#d29922;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f5f6f8; --card:#fff; --line:#e2e5ea; --txt:#1c2128; --dim:#6b7280; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+    font:15px/1.7 -apple-system,"SF Arabic","Segoe UI",Tahoma,sans-serif;padding:28px 18px 70px}
+  .wrap{max-width:760px;margin:0 auto}
+  h1{font-size:23px;margin:0 0 4px}
+  .sub{color:var(--dim);margin:0 0 24px;font-size:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:14px}
+  .card h2{font-size:15px;margin:0 0 14px;display:flex;align-items:center;gap:8px}
+  .n{background:var(--line);width:22px;height:22px;border-radius:50%;display:grid;place-items:center;
+    font-size:12px;color:var(--dim);flex:none}
+  label{display:block;font-size:13px;color:var(--dim);margin-bottom:6px}
+  input,textarea,button{font:inherit;color:inherit}
+  input[type=text],textarea{width:100%;background:var(--bg);border:1px solid var(--line);
+    border-radius:9px;padding:10px 12px;outline:none}
+  input:focus,textarea:focus{border-color:var(--acc)}
+  textarea{min-height:120px;resize:vertical;line-height:1.8}
+  button{background:var(--acc);color:#04240f;border:0;border-radius:9px;padding:11px 20px;
+    font-weight:700;cursor:pointer}
+  button:hover{background:var(--acc-d)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  button.ghost{background:transparent;border:1px solid var(--line);color:var(--txt);font-weight:500}
+  button.ghost:hover{background:var(--line)}
+  .big{width:100%;padding:18px;font-size:18px;border-radius:12px}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .grow{flex:1;min-width:200px}
+  .hint{font-size:12px;color:var(--dim);margin-top:6px}
+  code{background:var(--bg);border:1px solid var(--line);padding:1px 6px;border-radius:5px;font-size:12px}
+  .list{max-height:280px;overflow:auto;border:1px solid var(--line);border-radius:9px;margin-top:12px}
+  .item{display:flex;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line);font-size:13px}
+  .item:last-child{border-bottom:0}
+  .item.on{background:color-mix(in srgb,var(--acc) 12%,transparent)}
+  .item .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .item .ph{color:var(--dim);font-size:12px;direction:ltr}
+  .item button{padding:4px 12px;font-size:12px}
+  .tag{font-size:11px;color:var(--dim);border:1px solid var(--line);padding:0 6px;border-radius:20px}
+  .stats{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;margin-top:12px}
+  .stats b{font-size:19px;display:block;font-weight:700}
+  .stats span{color:var(--dim)}
+  details summary{cursor:pointer;color:var(--warn);font-size:13px;margin-top:12px}
+  .bar{height:7px;background:var(--line);border-radius:20px;overflow:hidden;margin:12px 0 6px}
+  .bar i{display:block;height:100%;background:var(--acc);width:0;transition:width .3s}
+  .now{text-align:center;padding:10px 0 16px}
+  .now .who{font-size:26px;font-weight:700;margin-bottom:2px}
+  .now .num{color:var(--dim);font-size:13px;direction:ltr}
+  .hide{display:none!important}
+  .banner{border-radius:9px;padding:10px 14px;font-size:13px;margin-bottom:14px;
+    background:color-mix(in srgb,var(--warn) 12%,transparent);border:1px solid var(--warn);color:var(--warn)}
+  .ok{color:var(--acc)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>إرسال واتساب من شيت</h1>
+  <p class="sub">يقرأ الأرقام من شيت قوقل وينضّفها، ويفتح لك كل محادثة والرسالة مكتوبة جاهزة.</p>
+
+  <div class="banner">
+    تضغط <b>Enter</b> في واتساب لكل رسالة. المتصفح ما يقدر يرسل نيابة عنك.
+    للإرسال التلقائي بالكامل، فيه نسخة تنزّل على الجهاز (الرابط بالأسفل).
+  </div>
+
+  <!-- ١ -->
+  <div class="card">
+    <h2><span class="n">١</span> القائمة</h2>
+    <label>رابط شيت قوقل — المشاركة لازم تكون «أي شخص لديه الرابط»</label>
+    <div class="row">
+      <input type="text" id="sheet" class="grow" dir="ltr" placeholder="https://docs.google.com/spreadsheets/d/...">
+      <button class="ghost" id="load">تحميل</button>
+    </div>
+    <p class="hint">الأعمدة بالترتيب: الاسم · المنصة · بيانات التواصل</p>
+    <div id="box" class="hide">
+      <div class="stats">
+        <div><b id="sTot">0</b><span>رقم صالح</span></div>
+        <div><b id="sDone">0</b><span>أُرسل</span></div>
+        <div><b id="sBad">0</b><span>يدوي</span></div>
+      </div>
+      <details id="badBox"><summary></summary><div class="list" id="bad"></div></details>
+    </div>
+  </div>
+
+  <!-- ٢ -->
+  <div class="card">
+    <h2><span class="n">٢</span> الرسالة</h2>
+    <textarea id="msg">هلا {name} 👋
+
+معك فريق أهداف. عندنا فرصة تعاون نحب نعرضها عليك.
+
+تقدر ترد هنا ونرسل لك التفاصيل.</textarea>
+    <p class="hint"><code>{name}</code> تتبدّل باسم كل مؤثر تلقائياً.</p>
+  </div>
+
+  <!-- ٣ -->
+  <div class="card hide" id="sendCard">
+    <h2><span class="n">٣</span> الإرسال</h2>
+    <div class="bar"><i id="fill"></i></div>
+    <div class="hint" id="counter"></div>
+    <div class="now" id="now"></div>
+    <button class="big" id="go">افتح واتساب وأرسل</button>
+    <div class="row" style="margin-top:10px">
+      <button class="ghost" id="skip">تخطّي</button>
+      <button class="ghost" id="reset">تصفير التقدّم</button>
+    </div>
+    <div class="list" id="list"></div>
+  </div>
+
+  <p class="hint" style="text-align:center;margin-top:22px">
+    تبيها ترسل لحالها بدون ما تضغط Enter؟
+    <a href="https://github.com/nawafalsawed-web/wa-blast" style="color:var(--acc)">النسخة الكاملة تنزّل من هنا</a>
+  </p>
+</div>
+
+<script>
+const $ = s => document.querySelector(s)
+const esc = s => String(s ?? '').replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))
+let contacts = [], bad = [], done = new Set(), i = 0
+
+// ── تنظيف الأرقام (سعودي) ──
+const norm9 = d => (/^5\d{8}$/.test(d) ? '966' + d : null)
+function normalize(raw){
+  if (!raw) return null
+  const d = String(raw).replace(/[​-‏‪-‮﻿]/g,'').replace(/\D/g,'')
+  if (!d) return null
+  if (d.startsWith('00966')) return norm9(d.slice(5))
+  if (d.startsWith('966'))   return norm9(d.slice(3))
+  if (d.startsWith('0'))     return norm9(d.slice(1))
+  return norm9(d)
+}
+// ── CSV ──
+function parseCSV(t){
+  const rows=[]; let row=[],f='',q=false
+  for (let j=0;j<t.length;j++){ const c=t[j]
+    if (q){ if (c==='"'){ if(t[j+1]==='"'){f+='"';j++} else q=false } else f+=c }
+    else if (c==='"') q=true
+    else if (c===',') { row.push(f); f='' }
+    else if (c==='\n'){ row.push(f); rows.push(row); row=[]; f='' }
+    else if (c!=='\r') f+=c }
+  if (f||row.length){ row.push(f); rows.push(row) }
+  return rows
+}
+const csvUrl = url => {
+  const m = String(url).match(/\/spreadsheets\/d\/([\w-]+)/)
+  if (!m) return null
+  const g = String(url).match(/[#&?]gid=(\d+)/)
+  // export وليس gviz: gviz يعتبر العمود رقمياً ويفضّي أي خلية فيها مسافات
+  return `https://docs.google.com/spreadsheets/d/${m[1]}/export?format=csv${g?'&gid='+g[1]:''}`
+}
+
+const key = () => 'done:' + ($('#sheet').value.match(/\/d\/([\w-]+)/)?.[1] || '')
+const save = () => localStorage.setItem(key(), JSON.stringify([...done]))
+
+$('#load').onclick = async () => {
+  const url = csvUrl($('#sheet').value)
+  if (!url) return alert('الصق رابط شيت قوقل صحيح')
+  $('#load').disabled = true; $('#load').textContent = 'يحمّل...'
+  try {
+    const r = await fetch(url)
+    if (!r.ok) throw new Error('تعذّر جلب الشيت — تأكد أن المشاركة «أي شخص لديه الرابط»')
+    const rows = parseCSV(await r.text())
+    contacts = []; bad = []
+    const seen = new Set()
+    for (const [name, platform, contact] of rows.slice(1)) {
+      if (!name?.trim()) continue
+      const phone = normalize(contact)
+      const row = { name: name.trim(), platform: (platform||'').trim(), contact: (contact||'').trim() }
+      if (!phone) { bad.push(row); continue }
+      if (seen.has(phone)) continue
+      seen.add(phone); contacts.push({ ...row, phone })
+    }
+    if (!contacts.length) throw new Error('ما لقيت أي رقم صالح في الشيت')
+    localStorage.setItem('sheet', $('#sheet').value)
+    done = new Set(JSON.parse(localStorage.getItem(key()) || '[]'))
+    render()
+  } catch (e) { alert(e.message) }
+  $('#load').disabled = false; $('#load').textContent = 'تحميل'
+}
+
+function render(){
+  $('#box').classList.remove('hide')
+  $('#sendCard').classList.remove('hide')
+  $('#sTot').textContent = contacts.length
+  $('#sBad').textContent = bad.length
+  $('#badBox').classList.toggle('hide', !bad.length)
+  $('#badBox summary').textContent = `⚠ ${bad.length} بيانات تواصل مو أرقام جوال — تواصل يدوي`
+  $('#bad').innerHTML = bad.map(b => `<div class="item"><span class="nm">${esc(b.name)}</span><span class="ph">${esc(b.contact)||'(فاضي)'}</span></div>`).join('')
+  $('#list').innerHTML = contacts.map((c,n) => `<div class="item" id="i${n}">
+      <span class="nm">${esc(c.name)}</span>
+      ${c.platform?`<span class="tag">${esc(c.platform)}</span>`:''}
+      <span class="ph">+${c.phone}</span>
+      <span class="st"></span>
+      <button class="ghost" onclick="jump(${n})">افتح</button>
+    </div>`).join('')
+  i = contacts.findIndex(c => !done.has(c.phone))
+  if (i < 0) i = contacts.length
+  paint()
+}
+
+function paint(){
+  contacts.forEach((c,n) => {
+    const el = $('#i'+n); if (!el) return
+    el.classList.toggle('on', n === i)
+    el.querySelector('.st').innerHTML = done.has(c.phone) ? '<span class="ok">✓</span>' : ''
+  })
+  $('#sDone').textContent = done.size
+  $('#fill').style.width = (done.size / contacts.length * 100) + '%'
+  $('#counter').textContent = `${done.size} من ${contacts.length}`
+  const c = contacts[i]
+  $('#now').innerHTML = c
+    ? `<div class="who">${esc(c.name)}</div><div class="num">+${c.phone}</div>`
+    : `<div class="who">🎉 خلصت القائمة</div>`
+  $('#go').disabled = !c
+  $('#skip').disabled = !c
+  if (c) $('#i'+i)?.scrollIntoView({ block:'nearest' })
+}
+
+function open_(n){
+  const c = contacts[n]; if (!c) return
+  const text = encodeURIComponent($('#msg').value.replaceAll('{name}', c.name))
+  window.open(`https://wa.me/${c.phone}?text=${text}`, '_blank')
+  done.add(c.phone); save()
+  i = contacts.findIndex(x => !done.has(x.phone)); if (i < 0) i = contacts.length
+  paint()
+}
+window.jump = open_
+$('#go').onclick = () => open_(i)
+$('#skip').onclick = () => { i++; paint() }
+$('#reset').onclick = () => { if (confirm('يمسح التقدّم ويبدأ من أول القائمة. متأكد؟')) { done = new Set(); save(); render() } }
+
+$('#sheet').value = localStorage.getItem('sheet') || ''
+if ($('#sheet').value) $('#load').click()
+
+// فحص ذاتي: افتح الصفحة بـ ?test=1
+if (new URLSearchParams(location.search).get('test')) {
+  const eq = (a,b,m) => { if (JSON.stringify(a)!==JSON.stringify(b)) throw new Error(`${m}: ${JSON.stringify(a)} ≠ ${JSON.stringify(b)}`) }
+  eq(normalize('533099252'),'966533099252','عادي')
+  eq(normalize('54 399 5222'),'966543995222','مسافات')
+  eq(normalize('5​08​88​75​77'),'966508887577','أحرف مخفية')
+  eq(normalize('0533099252'),'966533099252','صفر بادئ')
+  eq(normalize('00966533099252'),'966533099252','دولي')
+  eq(normalize('+966 53 309 9252'),'966533099252','بلس')
+  eq(normalize('a@b.com'),null,'إيميل')
+  eq(normalize('433099252'),null,'ما يبدأ بـ5')
+  eq(normalize('5458493670'),null,'عشر خانات')
+  eq(parseCSV('a,b\n"x\ny",z')[1],['x\ny','z'],'CSV متعدد الأسطر')
+  eq(csvUrl('https://docs.google.com/spreadsheets/d/ABC/edit#gid=42'),
+     'https://docs.google.com/spreadsheets/d/ABC/export?format=csv&gid=42','رابط')
+  eq(csvUrl('لا شيء'),null,'رابط غلط')
+  document.title = '✓ الفحص نجح'
+  console.log('✓ الفحص نجح')
+}
+</script>
+</body>
+</html>
